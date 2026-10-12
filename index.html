@@ -58,10 +58,10 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .item .d{font-size:.68rem;color:#6fe0a8;font-weight:600;min-height:1em}
 .item.arm{border-color:var(--rose);background:var(--panel2)}
 .item.arm .d{color:var(--rose)}
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--panel);padding:6px;border-radius:18px}
-.tab{padding:10px 2px;border-radius:13px;font-weight:600;font-size:.88rem;color:var(--muted);background:transparent;transition:background .2s,color .2s}
+.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;background:var(--panel);padding:5px;border-radius:18px}
+.tab{padding:10px 0;border-radius:13px;font-weight:600;font-size:.78rem;color:var(--muted);background:transparent;transition:background .2s,color .2s}
 .tab[aria-selected="true"]{background:var(--rose);color:#2a0a17}
-.tab .n{display:inline-block;min-width:1.4em;padding:0 5px;margin-left:4px;border-radius:999px;background:var(--gold);color:#4a2306;font-size:.75rem}
+.tab .n{display:inline-block;min-width:1.4em;padding:0 4px;margin-left:2px;border-radius:999px;background:var(--gold);color:#4a2306;font-size:.75rem}
 
 .panel{display:flex;flex-direction:column;align-items:center;gap:14px}
 .hint{color:var(--muted);font-size:.88rem;text-align:center;max-width:36ch}
@@ -190,6 +190,35 @@ details.settings summary{padding:12px 0;font-weight:600;color:var(--muted);curso
 .confirm{font-size:.85rem;color:#ffb3c4;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .sub-t{font-size:.8rem;color:var(--muted);margin:4px 0 6px;font-weight:600}
 
+/* ticket doré */
+.ticket.gold{background:linear-gradient(160deg,#fff3c4,#f6c453 60%,#e0a52c)}
+.ticket.gold .t-title{color:#7a3b12}
+.ticket.gold .t-rule{color:#7a3b12}
+/* onglet bonus */
+.card{width:100%;background:var(--panel);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.card-t{font-family:var(--display);font-size:1.05rem;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.card-t small{font-family:var(--body);font-size:.8rem;font-weight:600}
+.card-s{font-size:.8rem;color:var(--muted)}
+.dots{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.dot{height:34px;border-radius:10px;background:var(--panel2);display:grid;place-items:center;font-size:.75rem;font-weight:600;color:var(--muted)}
+.dot.gift{box-shadow:inset 0 0 0 2px var(--gold);color:var(--gold)}
+.dot.on{background:var(--rose);color:#2a0a17}
+.fw-box{position:relative;width:min(100%,260px);aspect-ratio:1;margin-top:8px}
+.fw-box canvas{width:100%;height:100%;display:block}
+.fw-ptr{position:absolute;left:50%;top:-10px;transform:translateX(-50%);border-left:15px solid transparent;border-right:15px solid transparent;border-top:28px solid var(--ink);filter:drop-shadow(0 3px 0 rgba(0,0,0,.4))}
+.defi-row{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-weight:600}
+.defi-row b{color:var(--gold);white-space:nowrap}
+.pbar{height:10px;background:var(--panel2);border-radius:99px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--gold);border-radius:99px;transition:width .4s}
+.ach{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.a{background:var(--panel2);border-radius:14px;padding:10px;display:flex;gap:8px;align-items:center;opacity:.5}
+.a.ok{opacity:1;box-shadow:inset 0 0 0 2px var(--gold)}
+.a .ai{font-size:1.5rem}
+.a b{display:block;font-size:.84rem;line-height:1.15}
+.a .ad{font-size:.7rem;color:var(--muted)}
+.a>div{min-width:0}
+.toast{position:fixed;left:0;right:0;margin:0 auto;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;width:min(calc(100vw - 32px),360px);box-shadow:0 10px 30px rgba(0,0,0,.55);transition:opacity .3s}
+.toast.out{opacity:0}
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
@@ -211,6 +240,7 @@ details.settings summary{padding:12px 0;font-weight:600;color:var(--muted);curso
     <button class="tab" role="tab" id="tab-gratte" aria-selected="false" data-p="gratte">Grattage</button>
     <button class="tab" role="tab" id="tab-shop" aria-selected="false" data-p="shop">Boutique</button>
     <button class="tab" role="tab" id="tab-bons" aria-selected="false" data-p="bons">Bons<span class="n" id="nbons" hidden>0</span></button>
+    <button class="tab" role="tab" id="tab-bonus" aria-selected="false" data-p="bonus">Bonus<span class="n" id="nbonus" hidden>!</span></button>
   </nav>
 
   <section class="panel" id="p-roue">
@@ -235,7 +265,7 @@ details.settings summary{padding:12px 0;font-weight:600;color:var(--muted);curso
     <div id="ticketZone"></div>
     <button class="big rose" id="buy">Acheter un ticket <span class="cost" id="buyCost"></span></button>
     <div id="scratchRes" style="width:100%;display:flex;justify-content:center"></div>
-    <p class="hint">Trois symboles identiques et le lot est à toi. Gratte avec le doigt. Un ticket offert chaque dimanche.</p>
+    <p class="hint">Trois symboles identiques et le lot est à toi. Gratte avec le doigt. Un ticket offert chaque dimanche. Un ticket sur 20 est doré : lots doublés.</p>
     <details class="odds"><summary>Gains et chances par ticket</summary><div id="oddsBody"></div></details>
   </section>
 
@@ -247,6 +277,16 @@ details.settings summary{padding:12px 0;font-weight:600;color:var(--muted);curso
   <section class="panel" id="p-bons" hidden>
     <div class="totals" id="totals"></div>
     <div class="bons" id="bonList"></div>
+  </section>
+
+  <section class="panel" id="p-bonus" hidden>
+    <div class="card"><div class="card-t">🔥 Série de connexions</div><div class="dots" id="streakDots"></div><p class="card-s" id="streakTxt"></p></div>
+    <div class="card" style="align-items:center"><div class="card-t" style="align-self:stretch">🎡 Roue du jour</div>
+      <div class="fw-box"><canvas id="fw" width="520" height="520" aria-label="Roue du jour"></canvas><div class="fw-ptr"></div></div>
+      <button class="big" id="fwBtn">Tourner la roue</button>
+      <div id="fwRes" style="width:100%;display:flex;justify-content:center"></div></div>
+    <div class="card"><div class="card-t">🎯 Défi du jour</div><div id="defi" style="display:flex;flex-direction:column;gap:8px"></div></div>
+    <div class="card"><div class="card-t">🏆 Succès <small id="achN"></small></div><div class="ach" id="achList"></div></div>
   </section>
 
   <details class="settings">
@@ -297,6 +337,7 @@ function load(){ let s=null; try{s=JSON.parse(localStorage.getItem(KEY));}catch(
   S=Object.assign(structuredClone(DEF),s||{}); S.settings=Object.assign(structuredClone(DEF.settings),(s&&s.settings)||{});
   S.owed=Object.assign({massage:0,esclave:0},S.owed||{});
   S.rstats=Object.assign({spins:0,staked:0,returned:0,curve:[0]},S.rstats||{});
+  S.stats=Object.assign({ticket:S.ticketNo||0,spin:S.rstats.spins||0},S.stats||{}); S.ach=S.ach||{};
   if(!S.mig15){ if(S.settings.ticket===10) S.settings.ticket=15; S.mig15=true; }
   S.settings.off=S.settings.off.filter(id=>LOTS.some(l=>l.id===id)); }
 function save(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
@@ -330,6 +371,46 @@ function grantBonus(){
     if(d>=BONUS_FROM&&d<=t&&!S.bonusGot.includes(d)){ S.bonusGot.push(d); S.points+=b.pts; got.push(b); } }));
   if(got.length) save(); return got;
 }
+/* série de connexions : cadeau aux jours 3 et 7, puis le cycle recommence */
+const STREAK_R=[0,0,5,0,0,0,15];
+function checkStreak(){
+  const t=today(), st=S.streak||{last:null,n:0}; if(st.last===t) return null;
+  st.n=st.last&&daysBetween(st.last,t)===1?st.n+1:1; st.last=t; S.streak=st;
+  const r=STREAK_R[(st.n-1)%7]; if(r) S.points+=r; save();
+  return r?{icon:"🔥",label:"Série de "+st.n+" jours !",pts:r}:null;
+}
+/* défi du jour : un seul par jour, choisi d'après la date */
+const DEFIS=[
+  {id:"t2", txt:"Gratte 2 tickets",                       ev:"ticket",   n:2, pts:10},
+  {id:"tw", txt:"Gagne un lot au grattage",               ev:"ticketWin",n:1, pts:10},
+  {id:"s5", txt:"Lance 5 fois la bille",                  ev:"spin",     n:5, pts:10},
+  {id:"sw", txt:"Gagne 2 fois à la roulette",             ev:"spinWin",  n:2, pts:10},
+  {id:"red",txt:"Gagne en misant sur le rouge",           ev:"winRed",   n:1, pts:10},
+  {id:"x3", txt:"Gagne sur une douzaine ou une colonne",  ev:"winX3",    n:1, pts:15},
+  {id:"wh", txt:"Fais tourner la roue du jour",           ev:"wheel",    n:1, pts:5},
+];
+function ensureDefi(){
+  const t=today(); if(S.defi?.day===t) return S.defi;
+  let h=0; for(const ch of t) h=(h*31+ch.charCodeAt(0))%9973;
+  let i=h%DEFIS.length; if(S.defi&&DEFIS[i].id===S.defi.id) i=(i+1)%DEFIS.length;
+  S.defi={day:t,id:DEFIS[i].id,prog:0,done:false}; save(); return S.defi;
+}
+/* succès : récompense unique */
+const ACH=[
+  {id:"t1",   icon:"🎟️",t:"Premier grattage",    d:"Gratte un ticket",         pts:5,  ok:s=>s.ticket>=1},
+  {id:"tw1",  icon:"🍀", t:"Main heureuse",       d:"Gagne un lot au grattage", pts:10, ok:s=>s.ticketWin>=1},
+  {id:"t25",  icon:"🪙", t:"Gratteuse pro",       d:"Gratte 25 tickets",        pts:20, ok:s=>s.ticket>=25},
+  {id:"t100", icon:"💎", t:"Légende du grattage", d:"Gratte 100 tickets",       pts:40, ok:s=>s.ticket>=100},
+  {id:"gold", icon:"✨", t:"Ticket doré",         d:"Tombe sur un ticket doré", pts:15, ok:s=>s.gold>=1},
+  {id:"jack", icon:"👑", t:"Jackpot",             d:"Gagne 10 min d'un coup",   pts:20, ok:s=>s.jackpot>=1},
+  {id:"s1",   icon:"🎰", t:"Faites vos jeux",     d:"Lance ta 1re bille",       pts:5,  ok:s=>s.spin>=1},
+  {id:"s50",  icon:"🎲", t:"Habituée du casino",  d:"Lance 50 billes",          pts:20, ok:s=>s.spin>=50},
+  {id:"plein",icon:"🎯", t:"Plein dans le mille", d:"Gagne sur un numéro plein",pts:25, ok:s=>s.plein>=1},
+  {id:"w7",   icon:"🎡", t:"La roue tourne",      d:"Tourne la roue 7 fois",    pts:15, ok:s=>s.wheel>=7},
+  {id:"st7",  icon:"🔥", t:"Fidèle",              d:"7 jours d'affilée",        pts:20, ok:()=>(S.streak?.n||0)>=7},
+  {id:"st30", icon:"💞", t:"Inséparables",        d:"30 jours d'affilée",       pts:50, ok:()=>(S.streak?.n||0)>=30},
+  {id:"d10",  icon:"🏅", t:"Relève les défis",    d:"Réussis 10 défis",         pts:20, ok:s=>s.defis>=10},
+];
 /* un ticket gratuit par dimanche */
 const freeTicket=()=>new Date().getDay()===0&&S.freeSunday!==today();
 const $=id=>document.getElementById(id);
@@ -536,6 +617,8 @@ function settle(n){
   z.appendChild(d);
   if(payout){ const [x,y]=centerOf(wc); if(net>=staked*10){bigFanfare();confetti(x,y,160);coins(x,y,40);} else {fanfare();coins(x,y,net>0?24:8);} }
   else sad();
+  track("spin"); if(payout) track("spinWin"); if(won.includes("red")) track("winRed");
+  if(won.some(k=>/^[dc][123]$/.test(k))) track("winX3"); if(won.some(k=>/^n\d+$/.test(k))) track("plein");
 }
 function renderLedger(){
   const R=S.rstats, net=R.returned-R.staked, z=$("ledger");
@@ -579,6 +662,7 @@ function renderPts(bump){
   $("refill").innerHTML=S.points>=S.settings.cap?"Au-dessus du plafond : pas de recharge tant que tu as plus de <b>"+S.settings.cap+" pts</b>."
     :"<b>+"+S.settings.slot+" pts</b> toutes les 3 h, prochain à "+((slotNow().i+1)*3%24)+" h (jusqu'à "+S.settings.cap+")";
   const open=S.bons.filter(b=>!b.used).length+S.owed.massage+S.owed.esclave,nb=$("nbons"); nb.hidden=!open; nb.textContent=open;
+  $("nbonus").hidden=S.wheel?.day===today();
   renderChipSel(); renderShop();
 }
 
@@ -627,14 +711,14 @@ function makeTicket(){
   while(cells.length<6&&guard++<800){const l=pick(pool); if(l.id===winner?.id||(counts[l.id]||0)>=2)continue; add(l);}
   while(cells.length<6){const l=pool.find(x=>x.id!==winner?.id&&(counts[x.id]||0)<2)||pool[0]; add(l);}
   for(let i=cells.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]];}
-  S.ticketNo++; return {cells,win:winner?.id||null,done:false,no:S.ticketNo,cleared:false};
+  S.ticketNo++; return {cells,win:winner?.id||null,done:false,no:S.ticketNo,cleared:false,gold:Math.random()<1/20};
 }
 let foil,fctx2,scratchCount=0;
 function renderTicket(){
   const z=$("ticketZone"); z.textContent=""; const T=S.ticket;
   if(!T){ z.innerHTML='<div class="empty-ticket"><span class="e1">Pas de ticket en main</span><span>Achète-en un pour commencer à gratter.</span></div>'; return; }
-  const t=document.createElement("div"); t.className="ticket";
-  t.innerHTML=`<div class="t-head"><div class="t-title">Gratte-Câlin</div><div class="t-rule">3 identiques<br>= gagné</div></div>
+  const t=document.createElement("div"); t.className="ticket"+(T.gold?" gold":"");
+  t.innerHTML=`<div class="t-head"><div class="t-title">${T.gold?"Ticket doré ✨":"Gratte-Câlin"}</div><div class="t-rule">${T.gold?"Lots ×2 !<br>3 identiques":"3 identiques<br>= gagné"}</div></div>
     <div class="grid-wrap"><div class="grid" id="tcells"></div><canvas class="foil" id="foil"></canvas></div>
     <div class="t-no">TICKET N° ${String(T.no).padStart(5,"0")}</div>`;
   z.appendChild(t);
@@ -650,7 +734,7 @@ function paintFoil(){
   const dpr=devicePixelRatio||1; foil.width=r.width*dpr; foil.height=r.height*dpr;
   fctx2=foil.getContext("2d"); fctx2.setTransform(dpr,0,0,dpr,0,0); const w=r.width,h=r.height;
   const gr=fctx2.createLinearGradient(0,0,w,h);
-  gr.addColorStop(0,"#c9cbd3");gr.addColorStop(.35,"#f4f4f7");gr.addColorStop(.5,"#b5b8c2");gr.addColorStop(.75,"#eceef2");gr.addColorStop(1,"#a9acb7");
+  (S.ticket?.gold?["#d9a12a","#fff1b8","#c98f1c","#ffe08a","#b07a12"]:["#c9cbd3","#f4f4f7","#b5b8c2","#eceef2","#a9acb7"]).forEach((c,i)=>gr.addColorStop([0,.35,.5,.75,1][i],c));
   fctx2.fillStyle=gr; fctx2.fillRect(0,0,w,h);
   for(let i=0;i<900;i++){fctx2.fillStyle=`rgba(${Math.random()<.5?"255,255,255":"90,90,105"},${Math.random()*.35})`;fctx2.fillRect(Math.random()*w,Math.random()*h,1.5,1.5);}
   fctx2.fillStyle="rgba(194,39,90,.18)";fctx2.font="22px system-ui";fctx2.textAlign="center";
@@ -672,7 +756,10 @@ function checkCleared(final){ if(!S.ticket||S.ticket.cleared||!fctx2)return;
   if(n&&clear/n>(final?.5:.58))revealTicket(); }
 function revealTicket(){ const T=S.ticket; T.cleared=true; T.done=true; save(); foil.classList.add("gone");
   setTimeout(()=>{ markWin(); const z=$("scratchRes"); z.textContent=""; const d=document.createElement("div");
-    if(T.win){ const lot=lotById(T.win); award(lot); d.className="result";
+    if(T.win){ const base=lotById(T.win);
+      /* ticket doré : quantité doublée */
+      const lot=T.gold&&base.amt?{...base,amt:base.amt*2,label:base.kind==="pts"?"+"+base.amt*2+" points":base.amt*2+" min "+(base.kind==="massage"?"de massage":"d'esclave")}:base;
+      award(lot); track("ticketWin"); if(lot.amt>=10&&lot.kind!=="pts") track("jackpot"); d.className="result";
       const sub=lot.kind==="pts"?"Ajoutés à ton solde.":lot.kind==="extra"?"Ajouté à tes bons.":"Total "+lot.kind+" : "+S.owed[lot.kind]+" min.";
       d.innerHTML=`<span class="ri">${lot.icon}</span><div><div class="rt"></div><div class="rs"></div></div>`;
       d.querySelector(".rt").textContent="Gagné : "+lot.label; d.querySelector(".rs").textContent=sub;
@@ -685,7 +772,8 @@ function revealTicket(){ const T=S.ticket; T.cleared=true; T.done=true; save(); 
 function markWin(){ if(!S.ticket?.win)return; document.querySelectorAll("#tcells .cell").forEach(c=>{if(c.dataset.id===S.ticket.win)c.classList.add("win");}); }
 function buy(){ const free=freeTicket(); if((!free&&avail()<S.settings.ticket)||(S.ticket&&!S.ticket.done))return;
   ac(); tone(660,.12,"triangle",.1,1.4); if(free) S.freeSunday=today(); else S.points-=S.settings.ticket;
-  S.ticket=makeTicket(); save(); $("scratchRes").textContent=""; renderTicket(); renderPts(true); }
+  S.ticket=makeTicket(); save(); $("scratchRes").textContent=""; renderTicket(); renderPts(true);
+  track("ticket"); if(S.ticket.gold){ track("gold"); toast("✨","Ticket doré !","Tous les lots de ce ticket sont doublés."); } }
 
 /* ---------- boutique ---------- */
 const PACKS=[[1,1],[5,.95],[10,.9]];
@@ -727,10 +815,88 @@ function renderOdds(){
   L.forEach(l=>row(l.icon,l.label,l.w)); row("💨","Rien",RIEN_W);
 }
 
+/* ---------- onglet bonus ---------- */
+const toasts=[]; let toastOn=false;
+function toast(icon,title,sub){ toasts.push([icon,title,sub]); if(!toastOn) nextToast(); }
+function nextToast(){ const t=toasts.shift(); if(!t){toastOn=false;return;} toastOn=true;
+  const d=document.createElement("div"); d.className="result toast";
+  d.innerHTML='<span class="ri"></span><div><div class="rt"></div><div class="rs"></div></div>';
+  d.querySelector(".ri").textContent=t[0]; d.querySelector(".rt").textContent=t[1]; d.querySelector(".rs").textContent=t[2];
+  document.body.appendChild(d); fanfare();
+  let gone=false; const close=()=>{ if(gone)return; gone=true; d.classList.add("out"); setTimeout(()=>{d.remove();nextToast();},300); };
+  d.onclick=close; setTimeout(close,3500); }
+function track(ev,k=1){
+  S.stats[ev]=(S.stats[ev]||0)+k;
+  const d=ensureDefi(), D=DEFIS.find(x=>x.id===d.id);
+  if(D&&!d.done&&D.ev===ev){ d.prog=Math.min(D.n,d.prog+k);
+    if(d.prog>=D.n){ d.done=true; S.points+=D.pts; S.stats.defis=(S.stats.defis||0)+1; toast("🎯","Défi réussi !",D.txt+" · +"+D.pts+" pts"); renderPts(true); } }
+  save(); checkAch(); renderBonusPanel();
+}
+function checkAch(){
+  let got=false;
+  ACH.forEach(a=>{ if(!S.ach[a.id]&&a.ok(S.stats)){ got=true; S.ach[a.id]=today(); S.points+=a.pts; toast(a.icon,"Succès : "+a.t,a.d+" · +"+a.pts+" pts"); renderPts(true); } });
+  save(); if(got) renderBonusPanel();
+}
+/* roue du jour : 1 tour gratuit par jour */
+const FW=[
+  {t:"+5", pts:5, c:"#7cc4ff"},{t:"+10",pts:10,c:"#ff6b8e"},{t:"+5", pts:5, c:"#9b6bd1"},{t:"💆", lot:"m1",   c:"#1f8a5b"},
+  {t:"+5", pts:5, c:"#7cc4ff"},{t:"+20",pts:20,c:"#f6c453"},{t:"+5", pts:5, c:"#9b6bd1"},{t:"🙇", lot:"e1",   c:"#1f8a5b"},
+  {t:"+10",pts:10,c:"#ff6b8e"},{t:"💋", lot:"bisou",c:"#d6284b"},
+];
+const FSEG=Math.PI*2/FW.length; let fwRot=0, fwSpinning=false;
+const fwLabel=s=>s.pts?"+"+s.pts+" points":lotById(s.lot).label;
+function drawFW(){ const c=$("fw"), g=c.getContext("2d"), R=c.width/2;
+  g.clearRect(0,0,c.width,c.height); g.save(); g.translate(R,R);
+  FW.forEach((s,i)=>{ const a=fwRot+i*FSEG-Math.PI/2;
+    g.beginPath(); g.moveTo(0,0); g.arc(0,0,R-10,a-FSEG/2,a+FSEG/2); g.closePath(); g.fillStyle=s.c; g.fill();
+    g.lineWidth=4; g.strokeStyle="#1c0e23"; g.stroke();
+    g.save(); g.rotate(a); g.translate(R*.66,0); g.rotate(Math.PI/2);
+    g.fillStyle=s.c==="#f6c453"||s.c==="#7cc4ff"?"#2a0a17":"#fff"; g.font="700 44px Fredoka, system-ui"; g.textAlign="center"; g.textBaseline="middle";
+    g.fillText(s.t,0,0); g.restore(); });
+  g.beginPath(); g.arc(0,0,R-10,0,Math.PI*2); g.lineWidth=12; g.strokeStyle="#f6c453"; g.stroke();
+  g.beginPath(); g.arc(0,0,R*.13,0,Math.PI*2); g.fillStyle="#f6c453"; g.fill(); g.restore(); }
+function fwSpin(){ if(fwSpinning||S.wheel?.day===today()) return; ac();
+  const i=Math.floor(Math.random()*FW.length); S.wheel={day:today(),i,claimed:false}; save();
+  fwSpinning=true; $("fwRes").textContent=""; renderBonusPanel(); renderPts();
+  const r0=fwRot, dur=reduced?800:4200, t0=performance.now(); let last=Math.floor(r0/FSEG);
+  let r1=-i*FSEG+(Math.random()-.5)*FSEG*.7; while(r1<r0+Math.PI*2*(reduced?1:5)) r1+=Math.PI*2;
+  (function f(now){ const p=Math.min(1,(now-t0)/dur); fwRot=r0+(r1-r0)*(1-Math.pow(1-p,3.5)); drawFW();
+    const k=Math.floor(fwRot/FSEG); if(k!==last){ last=k; tone(1800,.03,"square",.03); }
+    if(p<1) requestAnimationFrame(f); else { fwSpinning=false; claimWheel(true); } })(t0);
+}
+function claimWheel(show){ const w=S.wheel; if(!w||w.claimed) return; w.claimed=true; const s=FW[w.i];
+  if(s.pts){ S.points+=s.pts; save(); } else award(lotById(s.lot));
+  track("wheel"); renderPts(true);
+  if(show){ const z=$("fwRes"), d=document.createElement("div"); d.className="result";
+    d.innerHTML='<span class="ri"></span><div><div class="rt"></div><div class="rs">Reviens demain pour un nouveau tour.</div></div>';
+    d.querySelector(".ri").textContent=s.pts?"🪙":lotById(s.lot).icon; d.querySelector(".rt").textContent="Gagné : "+fwLabel(s);
+    z.textContent=""; z.appendChild(d); fanfare(); const [x,y]=centerOf($("fw")); s.pts?coins(x,y,s.pts):confetti(x,y,80); } }
+function renderBonusPanel(){
+  const n=S.streak?.n||1, pos=(n-1)%7, D=$("streakDots"); D.textContent="";
+  STREAK_R.forEach((r,i)=>{ const d=document.createElement("div"); d.className="dot"+(r?" gift":"")+(i<=pos?" on":""); d.textContent=r?"+"+r:"J"+(i+1); D.appendChild(d); });
+  const nx=STREAK_R.findIndex((r,i)=>i>pos&&r);
+  $("streakTxt").textContent=(n>1?n+" jours d'affilée":"1er jour de ta série")+
+    (nx>0?" · cadeau de +"+STREAK_R[nx]+" pts dans "+(nx-pos)+" j":" · un nouveau cycle commence demain")+". Un jour manqué et la série repart de zéro.";
+  const done=S.wheel?.day===today(); $("fwBtn").disabled=done||fwSpinning; $("fwBtn").textContent=done&&!fwSpinning?"Reviens demain":"Tourner la roue";
+  if(done&&!fwSpinning&&!$("fwRes").textContent){ const p=document.createElement("p"); p.className="card-s"; p.textContent="Aujourd'hui : "+fwLabel(FW[S.wheel.i]); $("fwRes").appendChild(p); }
+  drawFW();
+  const d=ensureDefi(), Df=DEFIS.find(x=>x.id===d.id), z=$("defi");
+  z.innerHTML=`<div class="defi-row"><span></span><b></b></div><div class="pbar"><i style="width:${d.prog/Df.n*100}%"></i></div><p class="card-s"></p>`;
+  z.querySelector("span").textContent=Df.txt; z.querySelector("b").textContent=(d.done?"✅ ":"")+"+"+Df.pts+" pts";
+  z.querySelector("p").textContent=d.done?"Réussi ! Un nouveau défi t'attend demain.":d.prog+" / "+Df.n;
+  const L=$("achList"); L.textContent="";
+  ACH.forEach(a=>{ const ok=!!S.ach[a.id], e=document.createElement("div"); e.className="a"+(ok?" ok":"");
+    e.innerHTML='<span class="ai"></span><div><b></b><span class="ad"></span></div>';
+    e.querySelector(".ai").textContent=ok?a.icon:"🔒"; e.querySelector("b").textContent=a.t; e.querySelector(".ad").textContent=a.d+" · +"+a.pts;
+    L.appendChild(e); });
+  $("achN").textContent=Object.keys(S.ach).length+" / "+ACH.length;
+}
+
 /* ---------- tabs ---------- */
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===b));
-  ["roue","gratte","shop","bons"].forEach(p=>$("p-"+p).hidden=p!==b.dataset.p);
+  ["roue","gratte","shop","bons","bonus"].forEach(p=>$("p-"+p).hidden=p!==b.dataset.p);
+  if(b.dataset.p==="bonus")renderBonusPanel();
   if(b.dataset.p==="gratte"&&S.ticket&&!S.ticket.cleared)renderTicket();
   if(b.dataset.p==="roue")drawWheel();
   try{localStorage.setItem(KEY+"-tab",b.dataset.p);}catch(e){}
@@ -755,7 +921,8 @@ function renderSettings(){
 
 /* ---------- boot ---------- */
 load();
-const gained=refill(), bonus=grantBonus();
+const gained=refill(), bonus=grantBonus(), stk=checkStreak(); if(stk) bonus.push(stk);
+ensureDefi();
 function showBonus(got){ const z=$("bonusMsg"); z.textContent="";
   got.forEach(b=>{ const d=document.createElement("div"); d.className="result";
     d.innerHTML='<span class="ri"></span><div><div class="rt"></div><div class="rs"></div></div>';
@@ -764,12 +931,16 @@ function showBonus(got){ const z=$("bonusMsg"); z.textContent="";
   z.onclick=()=>{z.textContent="";};
   renderPts(true); const [x,y]=centerOf($("pts")); coins(x,y,40); }
 buildTable(); drawWheel(); renderHist(); renderLedger(); renderChipsOnTable(); renderPts(); renderBons(); renderTicket(); renderSettings(); renderOdds();
+renderBonusPanel(); $("fwBtn").onclick=fwSpin;
 $("spin").onclick=spin; $("buy").onclick=buy;
 if(document.fonts) document.fonts.ready.then(drawWheel);
 if(bonus.length) setTimeout(()=>showBonus(bonus),500);
 else if(gained>0) setTimeout(()=>{renderPts(true);const [x,y]=centerOf($("pts"));coins(x,y,20);},500);
+claimWheel(false); setTimeout(checkAch,1200);
 try{const t=localStorage.getItem(KEY+"-tab");if(t)document.querySelector(`.tab[data-p="${t}"]`)?.click();}catch(e){}
-setInterval(()=>{const g=refill(),b=grantBonus(); if(b.length)showBonus(b); else if(g>0)renderPts(true);},60000);
+setInterval(()=>{ const g=refill(),b=grantBonus(),st=checkStreak(); if(st)b.push(st);
+  if(b.length)showBonus(b); else if(g>0)renderPts(true);
+  if(st||S.defi?.day!==today()){ ensureDefi(); renderPts(); renderBonusPanel(); checkAch(); } },60000);
 })();
 </script>
 
