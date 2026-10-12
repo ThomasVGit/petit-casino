@@ -204,6 +204,7 @@ details.settings summary{padding:12px 0;font-weight:600;color:var(--muted);curso
     <div class="wallet" title="Points disponibles"><div class="coin">P</div><span class="pts" id="pts">0</span></div>
   </header>
   <p class="refill" id="refill"></p>
+  <div id="bonusMsg" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:8px"></div>
 
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-roue" aria-selected="true" data-p="roue">Roulette</button>
@@ -234,7 +235,7 @@ details.settings summary{padding:12px 0;font-weight:600;color:var(--muted);curso
     <div id="ticketZone"></div>
     <button class="big rose" id="buy">Acheter un ticket <span class="cost" id="buyCost"></span></button>
     <div id="scratchRes" style="width:100%;display:flex;justify-content:center"></div>
-    <p class="hint">Trois symboles identiques et le lot est à toi. Gratte avec le doigt.</p>
+    <p class="hint">Trois symboles identiques et le lot est à toi. Gratte avec le doigt. Un ticket offert chaque dimanche.</p>
     <details class="odds"><summary>Gains et chances par ticket</summary><div id="oddsBody"></div></details>
   </section>
 
@@ -316,6 +317,21 @@ function refill(){
   if(S.points<S.settings.cap) S.points=Math.min(S.settings.cap,S.points+n*S.settings.slot);
   save(); return S.points-before;
 }
+/* bonus des dates spéciales (+pts hors plafond), versé à la 1re ouverture le jour J ou après */
+const BONUS=[
+  {md:"10-17",pts:300,icon:"🎁",label:"Bonus du 17 octobre"},
+  {md:"12-17",pts:300,icon:"🎁",label:"Bonus du 17 décembre"},
+  {md:"12-25",pts:300,icon:"🎄",label:"Joyeux Noël !"},
+];
+const BONUS_FROM="2026-10-12";
+function grantBonus(){
+  const t=today(), y=+t.slice(0,4), got=[]; S.bonusGot=S.bonusGot||[];
+  [y-1,y].forEach(yy=>BONUS.forEach(b=>{ const d=yy+"-"+b.md;
+    if(d>=BONUS_FROM&&d<=t&&!S.bonusGot.includes(d)){ S.bonusGot.push(d); S.points+=b.pts; got.push(b); } }));
+  if(got.length) save(); return got;
+}
+/* un ticket gratuit par dimanche */
+const freeTicket=()=>new Date().getDay()===0&&S.freeSunday!==today();
 const $=id=>document.getElementById(id);
 const winnable=()=>LOTS.filter(l=>!S.settings.off.includes(l.id));
 function pick(list){const tot=list.reduce((a,l)=>a+l.w,0);let r=Math.random()*tot;for(const l of list){if((r-=l.w)<0)return l;}return list[list.length-1];}
@@ -553,12 +569,13 @@ function renderHist(){ const h=$("history"); h.textContent="";
 function renderPts(bump){
   const el=$("pts"); el.textContent=avail();
   if(bump){el.classList.remove("bump");void el.offsetWidth;el.classList.add("bump");}
-  $("buyCost").textContent=S.settings.ticket+" pts";
+  const free=freeTicket(); $("buy").firstChild.nodeValue=free?"Ticket du dimanche ":"Acheter un ticket ";
+  $("buyCost").textContent=free?"Gratuit 🎁":S.settings.ticket+" pts";
   $("spin").disabled=spinning||!betTotal();
   $("undo").disabled=spinning||!stack.length; $("clear").disabled=spinning||!betTotal();
   $("double").disabled=spinning||!betTotal()||betTotal()>avail();
   $("rebet").disabled=spinning||!S.lastBets||!!betTotal();
-  $("buy").disabled=(S.ticket&&!S.ticket.done)||avail()<S.settings.ticket||winnable().length<3;
+  $("buy").disabled=(S.ticket&&!S.ticket.done)||(!free&&avail()<S.settings.ticket)||winnable().length<3;
   $("refill").innerHTML=S.points>=S.settings.cap?"Au-dessus du plafond : pas de recharge tant que tu as plus de <b>"+S.settings.cap+" pts</b>."
     :"<b>+"+S.settings.slot+" pts</b> toutes les 3 h, prochain à "+((slotNow().i+1)*3%24)+" h (jusqu'à "+S.settings.cap+")";
   const open=S.bons.filter(b=>!b.used).length+S.owed.massage+S.owed.esclave,nb=$("nbons"); nb.hidden=!open; nb.textContent=open;
@@ -666,8 +683,8 @@ function revealTicket(){ const T=S.ticket; T.cleared=true; T.done=true; save(); 
     else { d.className="result lose"; d.innerHTML='<span class="ri">💨</span><div><div class="rt">Raté !</div><div class="rs">Aucun triple sur ce ticket.</div></div>'; sad(); }
     z.appendChild(d); renderPts(); },350); }
 function markWin(){ if(!S.ticket?.win)return; document.querySelectorAll("#tcells .cell").forEach(c=>{if(c.dataset.id===S.ticket.win)c.classList.add("win");}); }
-function buy(){ if(avail()<S.settings.ticket||(S.ticket&&!S.ticket.done))return;
-  ac(); tone(660,.12,"triangle",.1,1.4); S.points-=S.settings.ticket;
+function buy(){ const free=freeTicket(); if((!free&&avail()<S.settings.ticket)||(S.ticket&&!S.ticket.done))return;
+  ac(); tone(660,.12,"triangle",.1,1.4); if(free) S.freeSunday=today(); else S.points-=S.settings.ticket;
   S.ticket=makeTicket(); save(); $("scratchRes").textContent=""; renderTicket(); renderPts(true); }
 
 /* ---------- boutique ---------- */
@@ -738,13 +755,21 @@ function renderSettings(){
 
 /* ---------- boot ---------- */
 load();
-const gained=refill();
+const gained=refill(), bonus=grantBonus();
+function showBonus(got){ const z=$("bonusMsg"); z.textContent="";
+  got.forEach(b=>{ const d=document.createElement("div"); d.className="result";
+    d.innerHTML='<span class="ri"></span><div><div class="rt"></div><div class="rs"></div></div>';
+    d.querySelector(".ri").textContent=b.icon; d.querySelector(".rt").textContent=b.label;
+    d.querySelector(".rs").textContent="+"+b.pts+" pts offerts ! (touche pour fermer)"; z.appendChild(d); });
+  z.onclick=()=>{z.textContent="";};
+  renderPts(true); const [x,y]=centerOf($("pts")); coins(x,y,40); }
 buildTable(); drawWheel(); renderHist(); renderLedger(); renderChipsOnTable(); renderPts(); renderBons(); renderTicket(); renderSettings(); renderOdds();
 $("spin").onclick=spin; $("buy").onclick=buy;
 if(document.fonts) document.fonts.ready.then(drawWheel);
-if(gained>0) setTimeout(()=>{renderPts(true);const [x,y]=centerOf($("pts"));coins(x,y,20);},500);
+if(bonus.length) setTimeout(()=>showBonus(bonus),500);
+else if(gained>0) setTimeout(()=>{renderPts(true);const [x,y]=centerOf($("pts"));coins(x,y,20);},500);
 try{const t=localStorage.getItem(KEY+"-tab");if(t)document.querySelector(`.tab[data-p="${t}"]`)?.click();}catch(e){}
-setInterval(()=>{if(refill()>0)renderPts(true);},60000);
+setInterval(()=>{const g=refill(),b=grantBonus(); if(b.length)showBonus(b); else if(g>0)renderPts(true);},60000);
 })();
 </script>
 
