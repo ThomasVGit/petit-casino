@@ -331,7 +331,7 @@ const LOTS=[
   {id:"bisou", icon:"💋", label:"Un bisou, tout de suite", short:"Bisou", w:3, kind:"extra", extra:true},
 ];
 const DEF={points:100,lastDay:null,bons:[],owed:{massage:0,esclave:0},ticket:null,ticketNo:0,hist:[],lastBets:null,
-  settings:{slot:15,cap:300,ticket:15,shop:35,off:LOTS.filter(l=>l.extra).map(l=>l.id)}};
+  settings:{slot:15,cap:300,ticket:18,shop:35,off:LOTS.filter(l=>l.extra).map(l=>l.id)}};
 let S;
 function load(){ let s=null; try{s=JSON.parse(localStorage.getItem(KEY));}catch(e){}
   S=Object.assign(structuredClone(DEF),s||{}); S.settings=Object.assign(structuredClone(DEF.settings),(s&&s.settings)||{});
@@ -340,6 +340,7 @@ function load(){ let s=null; try{s=JSON.parse(localStorage.getItem(KEY));}catch(
   S.stats=Object.assign({ticket:S.ticketNo||0,spin:S.rstats.spins||0},S.stats||{}); S.ach=S.ach||{};
   if(!S.mig15){ if(S.settings.ticket===10) S.settings.ticket=15; S.mig15=true; }
   if(!S.mig35){ if(S.settings.shop===30) S.settings.shop=35; S.mig35=true; }
+  if(!S.mig18){ if(S.settings.ticket===15) S.settings.ticket=18; S.mig18=true; }
   S.settings.off=S.settings.off.filter(id=>LOTS.some(l=>l.id===id)); }
 function save(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
@@ -806,7 +807,7 @@ function renderShop(){
     z.appendChild(g);
   });
   if(!$("shopHint").textContent.includes("ajoutées"))
-    $("shopHint").textContent=`Achat garanti, mais plus cher : en moyenne, une minute gagnée au grattage revient à environ 25 pts. Touche deux fois pour acheter.`;
+    $("shopHint").textContent=`Achat garanti, mais plus cher : en moyenne, une minute gagnée au grattage revient à environ 30 pts. Touche deux fois pour acheter.`;
 }
 
 function renderOdds(){
