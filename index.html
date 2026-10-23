@@ -127,6 +127,11 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .cell .lb{font-size:.68rem;font-weight:600;line-height:1.1;color:#5b2747}
 .cell.win{background:var(--gold);animation:winpop .6s ease-out both}
 @keyframes winpop{50%{transform:scale(1.12) rotate(-3deg)}}
+.cell.evil{background:#3a0b1c;animation:winpop .6s ease-out both}
+.cell.evil .lb{color:#ff8fa8}
+.ticket.cursed{animation:curse .7s ease-in-out}
+@keyframes curse{0%,100%{transform:none;filter:none}15%,45%,75%{transform:translateX(-7px) rotate(-1deg);filter:hue-rotate(-40deg) saturate(1.6)}30%,60%,90%{transform:translateX(7px) rotate(1deg)}}
+.result.evil{border-color:#c4163f;background:#2a0714}
 .foil{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;transition:opacity .6s}
 .foil.gone{opacity:0;pointer-events:none}
 .empty-ticket{width:100%;max-width:360px;border:3px dashed var(--line);border-radius:20px;padding:34px 20px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:6px;align-items:center}
@@ -308,7 +313,7 @@ details.settings summary{padding:12px 0;font-weight:600;color:var(--muted);curso
 "use strict";
 const KEY="petit-casino-v2";
 /* w = chance in % (out of ~100, "rien" included) */
-const RIEN_W=45;
+const RIEN_W=40;
 const LOTS=[
   {id:"pt5",  icon:"🪙", label:"+5 points",  short:"+5 pts",  w:14,  kind:"pts", amt:5},
   {id:"pt10", icon:"🪙", label:"+10 points", short:"+10 pts", w:7,   kind:"pts", amt:10},
@@ -321,6 +326,7 @@ const LOTS=[
   {id:"e5",   icon:"🙇", label:"5 min d'esclave",   short:"Esclave 5′",  w:1,   kind:"esclave", amt:5},
   {id:"m10",  icon:"👑", label:"10 min de massage", short:"Massage 10′", w:0.4, kind:"massage", amt:10},
   {id:"e10",  icon:"⛓️", label:"10 min d'esclave",  short:"Esclave 10′", w:0.3, kind:"esclave", amt:10},
+  {id:"diable", icon:"😈", label:"Malus maléfique : −20 points", short:"Malus −20", w:5, kind:"malus", amt:20},
   {id:"calin", icon:"🫂", label:"15 min de câlins", short:"Câlins 15′", w:2, kind:"extra", extra:true},
   {id:"film",  icon:"🎬", label:"Tu choisis le film", short:"Choix film", w:2, kind:"extra", extra:true},
   {id:"vaiss", icon:"🧽", label:"Joker vaisselle", short:"Joker vaisselle", w:1.5, kind:"extra", extra:true},
@@ -412,6 +418,7 @@ const ACH=[
   {id:"st7",  icon:"🔥", t:"Fidèle",              d:"7 jours d'affilée",        pts:20, ok:()=>(S.streak?.n||0)>=7},
   {id:"st30", icon:"💞", t:"Inséparables",        d:"30 jours d'affilée",       pts:50, ok:()=>(S.streak?.n||0)>=30},
   {id:"d10",  icon:"🏅", t:"Relève les défis",    d:"Réussis 10 défis",         pts:20, ok:s=>s.defis>=10},
+  {id:"maud", icon:"😈", t:"Maudite",             d:"Tombe sur le malus maléfique", pts:10, ok:s=>s.malus>=1},
 ];
 /* un ticket gratuit par dimanche */
 const freeTicket=()=>new Date().getDay()===0&&S.freeSunday!==today();
@@ -434,6 +441,7 @@ const chipSound=()=>{tone(2400,.05,"square",.04);noise(.04,5000,.2);};
 function fanfare(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.25,"triangle",.14),i*110));}
 function bigFanfare(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>setTimeout(()=>tone(f,.3,"triangle",.15),i*120));}
 const sad=()=>tone(330,.35,"sine",.1,.6);
+function evil(){[294,277,262,247,165].forEach((f,i)=>setTimeout(()=>tone(f,i<4?.22:.7,"sawtooth",.07,i<4?1:.5),i*170));}
 let lastScratch=0;
 function scratchNoise(){const n=performance.now(); if(n-lastScratch<45)return; lastScratch=n; noise(.04,4000,.12);}
 
@@ -671,6 +679,7 @@ function renderPts(bump){
 /* ---------- bons ---------- */
 function award(lot){
   if(lot.kind==="pts"){ S.points+=lot.amt; save(); renderPts(true); return; }
+  if(lot.kind==="malus"){ S.points=Math.max(0,S.points-lot.amt); save(); renderPts(true); return; }
   if(lot.kind==="massage"||lot.kind==="esclave"){ S.owed[lot.kind]+=lot.amt; save(); renderPts(); renderBons(); return; }
   S.bons.unshift({k:Date.now()+"-"+Math.random().toString(36).slice(2,6),id:lot.id,icon:lot.icon,label:lot.label,at:new Date().toISOString(),used:false});
   save(); renderPts(); renderBons();
@@ -758,7 +767,10 @@ function checkCleared(final){ if(!S.ticket||S.ticket.cleared||!fctx2)return;
   if(n&&clear/n>(final?.5:.58))revealTicket(); }
 function revealTicket(){ const T=S.ticket; T.cleared=true; T.done=true; save(); foil.classList.add("gone");
   setTimeout(()=>{ markWin(); const z=$("scratchRes"); z.textContent=""; const d=document.createElement("div");
-    if(T.win){ const base=lotById(T.win);
+    if(T.win==="diable"){ const lot=lotById(T.win); award(lot); track("malus"); d.className="result evil";
+      d.innerHTML=`<span class="ri">${lot.icon}</span><div><div class="rt">Malus maléfique !</div><div class="rs">Les diables te volent ${lot.amt} points.</div></div>`;
+      evil(); const tk=foil.closest(".ticket"); tk.classList.add("cursed"); setTimeout(()=>tk.classList.remove("cursed"),700); }
+    else if(T.win){ const base=lotById(T.win);
       /* ticket doré : quantité doublée */
       const lot=T.gold&&base.amt?{...base,amt:base.amt*2,label:base.kind==="pts"?"+"+base.amt*2+" points":base.amt*2+" min "+(base.kind==="massage"?"de massage":"d'esclave")}:base;
       award(lot); track("ticketWin"); if(lot.amt>=10&&lot.kind!=="pts") track("jackpot"); d.className="result";
@@ -771,7 +783,7 @@ function revealTicket(){ const T=S.ticket; T.cleared=true; T.done=true; save(); 
       else { fanfare(); confetti(x,y,lot.amt>=5?120:60); } }
     else { d.className="result lose"; d.innerHTML='<span class="ri">💨</span><div><div class="rt">Raté !</div><div class="rs">Aucun triple sur ce ticket.</div></div>'; sad(); }
     z.appendChild(d); renderPts(); },350); }
-function markWin(){ if(!S.ticket?.win)return; document.querySelectorAll("#tcells .cell").forEach(c=>{if(c.dataset.id===S.ticket.win)c.classList.add("win");}); }
+function markWin(){ if(!S.ticket?.win)return; document.querySelectorAll("#tcells .cell").forEach(c=>{if(c.dataset.id===S.ticket.win)c.classList.add(S.ticket.win==="diable"?"evil":"win");}); }
 function buy(){ const free=freeTicket(); if((!free&&avail()<S.settings.ticket)||(S.ticket&&!S.ticket.done))return;
   ac(); tone(660,.12,"triangle",.1,1.4); if(free) S.freeSunday=today(); else S.points-=S.settings.ticket;
   S.ticket=makeTicket(); save(); $("scratchRes").textContent=""; renderTicket(); renderPts(true);
